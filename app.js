@@ -124,6 +124,18 @@ initScene();
 const menu=document.querySelector('.menu-toggle'),nav=document.querySelector('.site-header nav');
 menu.addEventListener('click',()=>{const open=menu.getAttribute('aria-expanded')!=='true';menu.setAttribute('aria-expanded',String(open));menu.textContent=open?'Sluiten':'Menu';nav.classList.toggle('is-open',open)});
 nav.querySelectorAll('a').forEach(a=>a.addEventListener('click',()=>{nav.classList.remove('is-open');menu.setAttribute('aria-expanded','false');menu.textContent='Menu'}));
+const hoverTextTargets='h1,h2,.chapter-kicker,.chapter-copy,.chapter-note,.eyebrow,.site-header nav a,.site-footer nav a,.section-intro>p,.gallery-copy>p,.location-copy>p,.contact-copy>p,.email-link,figcaption,.form-help';
+document.querySelectorAll(hoverTextTargets).forEach(element=>{
+ const walker=document.createTreeWalker(element,NodeFilter.SHOW_TEXT);let node;
+ while((node=walker.nextNode())){
+  if(!node.nodeValue.trim()||node.parentElement.closest('span'))continue;
+  const fragment=document.createDocumentFragment();
+  node.nodeValue.split(/(\s+)/).forEach(part=>{
+   if(!part.trim()){fragment.append(document.createTextNode(part));return}
+   const word=document.createElement('span');word.className='hover-word';word.textContent=part;fragment.append(word)
+  });node.replaceWith(fragment)
+ }
+});
 const revealObserver=new IntersectionObserver(entries=>entries.forEach(e=>{if(e.isIntersecting){e.target.classList.add('is-visible');revealObserver.unobserve(e.target)}}),{threshold:.12});document.querySelectorAll('.reveal').forEach(el=>revealObserver.observe(el));
 const form=document.querySelector('#inquiry-form'),error=document.querySelector('#form-error'),status=document.querySelector('#form-status');
 form.addEventListener('submit',e=>{e.preventDefault();const d=new FormData(form),name=String(d.get('name')||'').trim(),email=String(d.get('email')||'').trim(),message=String(d.get('message')||'').trim(),okN=!!name,okE=/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email),okM=!!message;form.elements.name.setAttribute('aria-invalid',String(!okN));form.elements.email.setAttribute('aria-invalid',String(!okE));form.elements.message.setAttribute('aria-invalid',String(!okM));if(!okN||!okE||!okM){error.hidden=false;status.textContent='';(!okN?form.elements.name:!okE?form.elements.email:form.elements.message).focus();return}error.hidden=true;const lines=['Naam: '+name,'E-mailadres: '+email,'Aankomst: '+(d.get('arrival')||'niet opgegeven'),'Vertrek: '+(d.get('departure')||'niet opgegeven'),'Aantal gasten: '+(d.get('guests')||'niet opgegeven'),'','Bericht:',message];status.textContent='Je e-mailprogramma wordt geopend. Verstuur het bericht daar om je aanvraag te verzenden.';location.href='mailto:'+CONTACT_EMAIL+'?subject='+encodeURIComponent('Verblijfsaanvraag Zandvoort — '+name)+'&body='+encodeURIComponent(lines.join('\n'))});

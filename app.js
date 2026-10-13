@@ -53,23 +53,223 @@ primaryNav.querySelectorAll('a').forEach((link) => link.addEventListener('click'
   menuButton.textContent = 'Menu';
 }));
 
+const API_URL = String(window.AVAILABILITY_API_URL || '').trim();
+const MAX_NIGHTS = 7;
+const availability = new Map();
+const calendar = document.querySelector('#calendar-days');
+const monthLabel = document.querySelector('#calendar-month');
+const calendarMessage = document.querySelector('#calendar-message');
+const selectionLabel = document.querySelector('#calendar-selection-text');
+const requestSelectedDates = document.querySelector('#calendar-request');
 const bookingForm = document.querySelector('#booking-form');
 const arrivalField = bookingForm.elements.arrival;
 const departureField = bookingForm.elements.departure;
-const today = new Date();
-today.setMinutes(today.getMinutes() - today.getTimezoneOffset());
-arrivalField.min = today.toISOString().slice(0, 10);
+const adminDialog = document.querySelector('#admin-dialog');
+const adminLogin = document.querySelector('#admin-login');
+const adminEditor = document.querySelector('#admin-editor');
+const localToday = new Date();
+localToday.setHours(0, 0, 0, 0);
+let displayedMonth = new Date(localToday.getFullYear(), localToday.getMonth(), 1);
+let selectedArrival = '';
+let selectedDeparture = '';
+let adminCode = '';
+
+function isoDate(date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+}
+
+function dateFromIso(value) {
+  const [year, month, day] = value.split('-').map(Number);
+  return new Date(year, month - 1, day);
+}
+
+function addDays(value, amount) {
+  const date = dateFromIso(value);
+  date.setDate(date.getDate() + amount);
+  return isoDate(date);
+}
+
+function prettyDate(value, options = { day: 'numeric', month: 'long' }) {
+  if (!value) return '';
+  return new Intl.DateTimeFormat('nl-NL', options).format(dateFromIso(value));
+}
+
+function apiJsonp(params) {
+  if (!API_URL) return Promise.reject(new Error('De gedeelde agenda is nog niet gekoppeld.'));
+  return new Promise((resolve, reject) => {
+    const callbackName = `__availabilityCallback${Date.now()}${Math.floor(Math.random() * 1000)}`;
+    const script = document.createElement('script');
+    const timeout = window.setTimeout(() => finish(new Error('De agenda reageert niet.')), 12000);
+    const finish = (error, data) => {
+      window.clearTimeout(timeout);
+      delete window[callbackName];
+      script.remove();
+      if (error) reject(error);
+      else resolve(data);
+    };
+    window[callbackName] = (data) => finish(null, data);
+    script.onerror = () => finish(new Error('De gedeelde agenda kan niet worden bereikt.'));
+    const url = new URL(API_URL);
+    Object.entries({ ...params, callback: callbackName, _: Date.now() }).forEach(([key, value]) => url.searchParams.set(key, value));
+    script.src = url.href;
+    document.head.append(script);
+  });
+}
+
+function dateStatus(value) {
+  const date = dateFromIso(value);
+  if (date < localToday) return 'past';
+  return availability.get(value) || 'unknown';
+}
+
+function selectionIsAvailable(start, end) {
+  let date = start;
+  while (date < end) {
+    if (dateStatus(date) !== 'available') return false;
+    date = addDays(date, 1);
+  }
+  return true;
+}
+
+function renderCalendar() {
+  const year = displayedMonth.getFullYear();
+  const month = displayedMonth.getMonth();
+  monthLabel.textContent = new Intl.DateTimeFormat('nl-NL', { month: 'long', year: 'numeric' }).format(displayedMonth);
+  document.querySelector('#calendar-prev').disabled = year === localToday.getFullYear() && month <= localToday.getMonth();
+  const cells = [];
+  const firstWeekday = (new Date(year, month, 1).getDay() + 6) % 7;
+  const numberOfDays = new Date(year, month + 1, 0).getDate();
+  for (let pad = 0; pad < firstWeekday; pad += 1) cells.push({ empty: true });
+  for (let day = 1; day <= numberOfDays; day += 1) cells.push({ day, value: isoDate(new Date(year, month, day)) });
+  while (cells.length % 7) cells.push({ empty: true });
+
+  calendar.replaceChildren();
+  cells.forEach((cell) => {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'calendar-day';
+    if (cell.empty) {
+      button.classList.add('is-outside');
+      button.tabIndex = -1;
+      button.setAttribute('aria-hidden', 'true');
+    } else {
+      const state = dateStatus(cell.value);
+      button.textContent = String(cell.day);
+      button.dataset.date = cell.value;
+      button.dataset.state = state;
+      button.setAttribute('aria-label', `${prettyDate(cell.value, { weekday: 'long', day: 'numeric', month: 'long' })}: ${state === 'available' ? 'beschikbaar' : state === 'booked' ? 'bezet' : state === 'past' ? 'verstreken' : 'nog niet bijgewerkt'}`);
+      const selected = cell.value === selectedArrival || cell.value === selectedDeparture;
+      const inRange = selectedArrival && selectedDeparture && cell.value > selectedArrival && cell.value < selectedDeparture;
+      if (selected) button.classList.add('is-selected');
+      else if (inRange) button.classList.add('is-in-range');
+      button.disabled = state === 'past';
+      if (!button.disabled) button.addEventListener('click', () => chooseCalendarDate(cell.value));
+    }
+    calendar.append(button);
+  });
+  updateSelection();
+  if (window.ScrollTrigger) window.ScrollTrigger.refresh();
+}
+
+function chooseCalendarDate(value) {
+  const state = dateStatus(value);
+  if (!selectedArrival || selectedDeparture || value <= selectedArrival) {
+    if (state !== 'available') {
+      calendarMessage.textContent = 'Kies een groene, beschikbare aankomstdag.';
+      return;
+    }
+    selectedArrival = value;
+    selectedDeparture = '';
+    calendarMessage.textContent = 'Kies nu een vertrekdag, maximaal zeven nachten later.';
+  } else {
+    const nights = Math.round((dateFromIso(value) - dateFromIso(selectedArrival)) / 86400000);
+    if (nights < 1 || nights > MAX_NIGHTS) {
+      calendarMessage.textContent = 'Een verblijf duurt minimaal één en maximaal zeven nachten.';
+      return;
+    }
+    if (!selectionIsAvailable(selectedArrival, value)) {
+      calendarMessage.textContent = 'Een of meer nachten in deze periode zijn bezet of nog niet bijgewerkt.';
+      return;
+    }
+    selectedDeparture = value;
+    calendarMessage.textContent = `${nights} ${nights === 1 ? 'nacht' : 'nachten'} geselecteerd. Vraag de periode aan per e-mail.`;
+  }
+  renderCalendar();
+}
+
+function updateSelection() {
+  if (selectedArrival && selectedDeparture) {
+    selectionLabel.textContent = `${prettyDate(selectedArrival)} t/m ${prettyDate(selectedDeparture)} · ${Math.round((dateFromIso(selectedDeparture) - dateFromIso(selectedArrival)) / 86400000)} nachten`;
+    requestSelectedDates.disabled = false;
+  } else if (selectedArrival) {
+    selectionLabel.textContent = `Aankomst ${prettyDate(selectedArrival)} · kies je vertrekdag`;
+    requestSelectedDates.disabled = true;
+  } else {
+    selectionLabel.textContent = 'Selecteer een beschikbare aankomstdag';
+    requestSelectedDates.disabled = true;
+  }
+}
+
+async function refreshAvailability() {
+  if (!API_URL) {
+    calendarMessage.textContent = 'De gedeelde agenda wordt nog gekoppeld. Vraag intussen actuele beschikbaarheid per e-mail.';
+    renderCalendar();
+    return;
+  }
+  calendarMessage.textContent = 'Beschikbaarheid laden…';
+  try {
+    const data = await apiJsonp({ action: 'read' });
+    if (!data || !data.ok || !Array.isArray(data.days)) throw new Error('De beschikbaarheid kon niet worden geladen.');
+    availability.clear();
+    data.days.forEach((entry) => {
+      if (/^\d{4}-\d{2}-\d{2}$/.test(entry.date) && ['available', 'booked'].includes(entry.status)) availability.set(entry.date, entry.status);
+    });
+    calendarMessage.textContent = 'Groene dagen zijn beschikbaar. Kies aankomst en vertrek om je aanvraag te versturen.';
+    renderCalendar();
+    return data.days;
+  } catch (error) {
+    calendarMessage.textContent = error.message || 'De beschikbaarheid kon niet worden geladen.';
+    renderCalendar();
+    return null;
+  }
+}
+
+const initialIsoDate = isoDate(localToday);
+arrivalField.min = initialIsoDate;
+departureField.min = initialIsoDate;
 arrivalField.addEventListener('change', () => {
-  departureField.min = arrivalField.value || arrivalField.min;
-  if (departureField.value && departureField.value <= arrivalField.value) departureField.value = '';
+  departureField.min = arrivalField.value || initialIsoDate;
+  departureField.max = arrivalField.value ? addDays(arrivalField.value, MAX_NIGHTS) : '';
+  if (departureField.value && (departureField.value <= arrivalField.value || departureField.value > departureField.max)) departureField.value = '';
+});
+document.querySelector('#calendar-prev').addEventListener('click', () => {
+  displayedMonth = new Date(displayedMonth.getFullYear(), displayedMonth.getMonth() - 1, 1);
+  renderCalendar();
+});
+document.querySelector('#calendar-next').addEventListener('click', () => {
+  displayedMonth = new Date(displayedMonth.getFullYear(), displayedMonth.getMonth() + 1, 1);
+  renderCalendar();
+});
+requestSelectedDates.addEventListener('click', () => {
+  if (selectedArrival && selectedDeparture) {
+    arrivalField.value = selectedArrival;
+    departureField.value = selectedDeparture;
+    departureField.min = selectedArrival;
+    departureField.max = addDays(selectedArrival, MAX_NIGHTS);
+    bookingForm.requestSubmit();
+  }
 });
 bookingForm.addEventListener('submit', (event) => {
   event.preventDefault();
   const arrival = arrivalField.value;
   const departure = departureField.value;
   const guests = bookingForm.elements.guests.value;
+  const nights = Math.round((dateFromIso(departure) - dateFromIso(arrival)) / 86400000);
   const error = document.querySelector('#booking-error');
-  if (!bookingForm.reportValidity() || !arrival || !departure || departure <= arrival) {
+  if (!bookingForm.reportValidity() || !arrival || !departure || nights < 1 || nights > MAX_NIGHTS) {
     error.hidden = false;
     return;
   }
@@ -80,13 +280,98 @@ bookingForm.addEventListener('submit', (event) => {
     '',
     `Aankomst: ${arrival}`,
     `Vertrek: ${departure}`,
+    `Aantal nachten: ${nights}`,
     `Aantal gasten: ${guests}`,
     '',
-    'Kunt u laten weten of deze periode beschikbaar is en wat de actuele voorwaarden zijn?',
+    'Kunt u laten weten of deze periode definitief beschikbaar is en wat de actuele voorwaarden zijn?',
   ].join('\n');
-  document.querySelector('#booking-note').textContent = 'Je e-mailprogramma wordt geopend. Verstuur je bericht daar om de aanvraag te verzenden.';
+  document.querySelector('#booking-note').textContent = 'Je e-mailprogramma wordt geopend. Je verblijf is pas bevestigd na een antwoord.';
   window.location.href = `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
 });
+
+document.querySelector('#open-admin').addEventListener('click', () => {
+  adminLogin.hidden = false;
+  adminEditor.hidden = true;
+  document.querySelector('#admin-login-error').hidden = true;
+  document.querySelector('#admin-login-form').reset();
+  if (typeof adminDialog.showModal === 'function') adminDialog.showModal();
+});
+function closeAdmin() {
+  adminDialog.close();
+  adminCode = '';
+  document.querySelector('#admin-login-form').reset();
+  document.querySelector('#admin-schedule-form').reset();
+}
+document.querySelector('#close-admin').addEventListener('click', closeAdmin);
+document.querySelector('#admin-logout').addEventListener('click', closeAdmin);
+adminDialog.addEventListener('click', (event) => { if (event.target === adminDialog) closeAdmin(); });
+document.querySelector('#admin-login-form').addEventListener('submit', async (event) => {
+  event.preventDefault();
+  const code = String(new FormData(event.currentTarget).get('code') || '').trim();
+  const error = document.querySelector('#admin-login-error');
+  error.hidden = true;
+  error.textContent = 'De code klopt niet. Probeer het opnieuw.';
+  try {
+    const response = await apiJsonp({ action: 'auth', code });
+    if (!response || !response.ok) throw new Error('De code klopt niet. Probeer het opnieuw.');
+    adminCode = code;
+    adminLogin.hidden = true;
+    adminEditor.hidden = false;
+    document.querySelector('#admin-schedule-form').elements.start.min = initialIsoDate;
+    document.querySelector('#admin-schedule-form').elements.end.min = initialIsoDate;
+    document.querySelector('#admin-message').textContent = '';
+  } catch (authError) {
+    error.textContent = authError.message || 'Inloggen is mislukt.';
+    error.hidden = false;
+  }
+});
+document.querySelector('#admin-schedule-form').elements.start.addEventListener('change', (event) => {
+  const end = document.querySelector('#admin-schedule-form').elements.end;
+  end.min = event.currentTarget.value || initialIsoDate;
+});
+document.querySelector('#admin-schedule-form').addEventListener('submit', async (event) => {
+  event.preventDefault();
+  const form = event.currentTarget;
+  const start = form.elements.start.value;
+  const end = form.elements.end.value;
+  const status = form.elements.status.value;
+  const error = document.querySelector('#admin-schedule-error');
+  const message = document.querySelector('#admin-message');
+  error.hidden = true;
+  if (!start || !end || end <= start || Math.round((dateFromIso(end) - dateFromIso(start)) / 86400000) > 366) {
+    error.textContent = 'Kies een geldige periode van maximaal één jaar.';
+    error.hidden = false;
+    return;
+  }
+
+  message.textContent = 'Periode wordt opgeslagen…';
+  try {
+    await fetch(API_URL, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'text/plain;charset=UTF-8' },
+      body: JSON.stringify({ action: 'set', code: adminCode, start, end, status }),
+    });
+    let confirmed = false;
+    for (let attempt = 0; attempt < 6; attempt += 1) {
+      await new Promise((resolve) => window.setTimeout(resolve, 700));
+      const days = await refreshAvailability();
+      const targetStatus = status;
+      confirmed = Array.isArray(days);
+      for (let date = start; confirmed && date < end; date = addDays(date, 1)) {
+        if (!availability.has(date) || availability.get(date) !== targetStatus) confirmed = false;
+      }
+      if (confirmed) break;
+    }
+    if (!confirmed) throw new Error('De agenda heeft de wijziging niet bevestigd. Controleer de Apps Script-deployment.');
+    message.textContent = 'De gedeelde agenda is bijgewerkt.';
+  } catch (saveError) {
+    message.textContent = saveError.message || 'Opslaan is mislukt. Probeer het opnieuw.';
+  }
+});
+
+renderCalendar();
+refreshAvailability();
 
 const contactForm = document.querySelector('#contact-form');
 contactForm.addEventListener('submit', (event) => {

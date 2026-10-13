@@ -1,102 +1,145 @@
 <!doctype html>
 <html lang="nl-NL">
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#102b38">
-<meta name="description" content="Verken de kust van Zandvoort in een interactieve 3D-architectuurervaring en neem rechtstreeks contact op over een verblijf.">
-<meta property="og:type" content="website"><meta property="og:title" content="Palace Hotel Zandvoort — een ander perspectief op zee"><meta property="og:description" content="Een interactieve 3D-kustervaring en rechtstreeks contact voor informatie over een verblijf."><meta property="og:image" content="assets/zandvoort-kust.webp">
-<title>Palace Hotel Zandvoort — een ander perspectief op zee</title>
-<link rel="icon" type="image/png" href="assets/favicon.png"><link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
-<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Playfair+Display:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css?v=8">
-<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/"}}</script>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f4f0e8">
+  <meta name="description" content="Appartement Eterna in Zandvoort: 75 m² aan zee, met twee balkons, op de 16e verdieping van Bouwes Palace.">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Palace Hotel Zandvoort — een verblijf aan zee">
+  <meta property="og:description" content="Ontdek Appartement Eterna: ruimte, licht en de kust van Zandvoort dichtbij.">
+  <meta property="og:image" content="assets/zandvoort-kust.webp">
+  <title>Palace Hotel Zandvoort — een verblijf aan zee</title>
+  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+  <link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Playfair+Display:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css?v=1">
 </head>
-<body><a class="skip-link" href="#inhoud">Ga naar de inhoud</a>
-<header class="site-header" id="top">
-<a class="wordmark" href="#top" aria-label="Palace Hotel Zandvoort, naar boven"><img class="brand-mark" src="assets/palace-brand-icon.png" alt="" aria-hidden="true"><span class="wordmark-copy"><strong>PALACE HOTEL</strong><small>ZANDVOORT</small></span></a>
-<button class="menu-toggle" aria-expanded="false" aria-controls="primary-nav">Menu</button>
-<nav id="primary-nav" aria-label="Hoofdnavigatie"><a href="#beleving">Beleving</a><a href="#appartement">Het appartement</a><a href="#galerij">Galerij</a><a href="#locatie">Locatie</a><a href="#contact">Contact</a></nav>
-<a class="header-contact" href="#contact">Neem contact op <span>↗</span></a>
-</header>
-<div id="smooth-wrapper"><div id="smooth-content">
-<main id="inhoud">
-<section class="experience" id="beleving" aria-label="Interactieve kust- en architectuurervaring">
-<div class="scene-stage" id="scene-stage">
-<canvas id="coast-scene" aria-label="Interactieve 3D-scène van een kusttoren, duinen en bewegende zee"></canvas>
-<div class="scene-vignette" aria-hidden="true"></div>
-<div class="scene-topline"><span>PALACE HOTEL · ZANDVOORT</span><span>ARCHITECTUURVISUALISATIE</span></div>
-<div class="scene-caption"><span id="scene-chapter-number">01 / 04</span><span id="scene-chapter-label">Kustoverzicht</span></div>
-<div class="hotspot-layer" id="hotspot-layer" aria-label="Punten in de 3D-scène">
-<button class="hotspot" data-hotspot="facade" aria-label="Bekijk de gevel en ga naar de architectuurstand" hidden><span>01</span><small>Gevel</small></button>
-<button class="hotspot" data-hotspot="balcony" aria-label="Bekijk de balkonzones en ga naar de architectuurstand" hidden><span>02</span><small>Balkon</small></button>
-<button class="hotspot" data-hotspot="coast" aria-label="Bekijk de kust en ga naar de zeezijde" hidden><span>03</span><small>Kustlijn</small></button>
-</div>
-<div class="scene-controls" aria-label="Bediening van de 3D-scène">
-<div class="view-buttons" role="group" aria-label="Kies een camerastand">
-<button data-view="overview" aria-pressed="true">Kustoverzicht</button><button data-view="architecture" aria-pressed="false">Architectuur</button><button data-view="sea" aria-pressed="false">Zeezijde</button>
-</div>
-<button class="explore-button" id="explore-toggle" aria-pressed="false">Vrij verkennen</button><button class="reset-button" id="reset-view" aria-label="Herstel het beginperspectief">↺</button>
-</div>
-<p class="hotspot-note" id="hotspot-note" role="status" aria-live="polite" hidden></p>
-<div class="scene-fallback" id="scene-fallback" hidden><strong>De kust blijft dichtbij.</strong><span>De 3D-scène is hier niet beschikbaar. Gebruik de hoofdstukken of neem rechtstreeks contact op.</span></div>
-<div class="scene-loader" id="scene-loader">3D-architectuur wordt geladen…</div>
-</div>
-<div class="story-track" aria-label="Hoofdstukken van de 3D-ervaring">
-<article class="story-chapter is-active" data-chapter="0">
-<p class="chapter-kicker">ZANDVOORT · AAN ZEE</p><h1>Een ander perspectief op de zee.</h1>
-<p class="chapter-copy">Ontdek de kust van Zandvoort en neem rechtstreeks contact op voor informatie over een verblijf.</p>
-<div class="chapter-actions"><a class="button button-light" href="#appartement">Ontdek de beleving <span>↘</span></a><a class="text-link text-link-light" href="#contact">Neem contact op</a></div>
-<p class="chapter-note">Scroll om de kust, architectuur en zeezijde vanuit een ander standpunt te bekijken.</p>
-</article>
-<article class="story-chapter" data-chapter="1">
-<p class="chapter-kicker">02 · ARCHITECTUUR</p><h2>Een ritme van balkons en licht.</h2>
-<p class="chapter-copy">Draai rond de aangeleverde torenvisualisatie. De gevel, raamvlakken en balkonzones zijn onderdeel van het 3D-model.</p>
-<p class="chapter-note">Architectuurvisualisatie op basis van het aangeleverde OBJ-model.</p>
-</article>
-<article class="story-chapter" data-chapter="2">
-<p class="chapter-kicker">03 · ZEEZIJDE</p><h2>Waar land en horizon elkaar raken.</h2>
-<p class="chapter-copy">De camera draait richting de kust en beweegt langs de duinen en het water. Kies een hotspot of camerastand om zelf verder te kijken.</p>
-<p class="chapter-note">De scène is een visualisatie; ze geeft geen woningoriëntatie of uitzichtgarantie weer.</p>
-</article>
-<article class="story-chapter" data-chapter="3">
-<p class="chapter-kicker">04 · VERDER ONTDEKKEN</p><h2>De kust op jouw tempo.</h2>
-<p class="chapter-copy">Gebruik de camerastanden, tik op een gemarkeerd punt of schakel vrij verkennen in. Je kunt altijd verder scrollen naar de woninginformatie en het contact.</p>
-<a class="text-link" href="#contact">Vraag informatie aan <span>→</span></a>
-</article>
-</div>
-</section>
-<section class="apartment section-shell" id="appartement">
-<div class="section-intro reveal reveal-left"><p class="eyebrow eyebrow-dark">HET APPARTEMENT</p><h2>Ruimte om te onthaasten.</h2>
-<p>Wil je meer weten over het verblijf? Neem rechtstreeks contact op voor de actuele woninginformatie en de mogelijkheden.</p><a class="text-link" href="#contact">Vraag informatie aan <span>→</span></a></div>
-<div class="home-note reveal reveal-right" aria-label="Woningfoto's zijn nog niet beschikbaar"><span class="home-note-mark">PALACE / 01</span><div class="home-note-lines" aria-hidden="true"><i></i><i></i><i></i></div><p>Woningbeelden op aanvraag</p><small>Er zijn nog geen goedgekeurde foto's van het appartement aangeleverd.</small></div>
-<div class="apartment-note reveal reveal-up"><span class="note-mark" aria-hidden="true">✳</span><p>Neem contact op voor bevestigde informatie. Deze pagina toont geen onbevestigde voorzieningen, prijzen of beschikbaarheid.</p></div>
-</section>
-<section class="gallery section-shell" id="galerij">
-<div class="gallery-copy reveal reveal-left"><p class="eyebrow">OMGEVING · ZANDVOORT</p><h2>De kust in avondlicht.</h2><p>Een panoramisch omgevingsbeeld van Zandvoort. Dit is geen foto van het appartement.</p></div>
-<figure class="gallery-image reveal reveal-right"><button class="image-open" aria-label="Vergroot het omgevingsbeeld van de kust van Zandvoort"><img src="assets/zandvoort-kust.webp" alt="Panoramisch uitzicht over de kust van Zandvoort bij zonsondergang" loading="lazy"><span>Omgevingsbeeld <b>↗</b></span></button><figcaption>Kust en boulevard van Zandvoort · omgevingsbeeld</figcaption></figure>
-</section>
-<section class="location" id="locatie">
-<div class="coastline-graphic reveal reveal-left" role="img" aria-label="Schematische kustlijn met zee, strand en duinen"><span class="coastline-label">NOORDZEE <i>·</i> ZANDVOORT</span><span class="horizon-line"></span><span class="dune-line dune-one"></span><span class="dune-line dune-two"></span><span class="shore-line"></span></div>
-<div class="location-copy reveal reveal-right"><p class="eyebrow eyebrow-dark">ZANDVOORT · NOORD-HOLLAND</p><h2>Een plek aan de kust.</h2><p>Zandvoort ligt aan de Nederlandse Noordzeekust. Vraag ons rechtstreeks naar de ligging van het appartement en wat je vooraf wilt weten.</p><a class="text-link" href="#contact">Stel je vraag <span>→</span></a></div>
-</section>
-<section class="contact section-shell" id="contact">
-<div class="contact-copy reveal reveal-left"><p class="eyebrow">CONTACT & AANVRAAG</p><h2>Interesse in een verblijf?</h2><p>Neem rechtstreeks contact op voor informatie over het appartement en de mogelijkheden.</p><a class="email-link" href="mailto:tresjuice@hotmail.com">tresjuice@hotmail.com <span>↗</span></a><button class="copy-email" id="copy-email">Kopieer e-mailadres</button></div>
-<form class="contact-form reveal reveal-right" id="inquiry-form" novalidate>
-<div class="field-row"><label>Naam <span>(verplicht)</span><input name="name" autocomplete="name" required></label><label>E-mailadres <span>(verplicht)</span><input name="email" type="email" autocomplete="email" required></label></div>
-<div class="field-row"><label>Aankomst <span>(optioneel)</span><input name="arrival" type="date"></label><label>Vertrek <span>(optioneel)</span><input name="departure" type="date"></label></div>
-<label>Aantal gasten <span>(optioneel)</span><input name="guests" type="number" min="1" inputmode="numeric"></label>
-<label>Bericht <span>(verplicht)</span><textarea name="message" rows="3" required></textarea></label>
-<p class="form-error" id="form-error" role="alert" hidden>Vul je naam, een geldig e-mailadres en een bericht in.</p>
-<div class="form-submit"><p id="form-status" role="status" aria-live="polite">Je e-mailprogramma opent om je aanvraag te versturen.</p><button class="button button-light" type="submit">Open e-mailprogramma <span>↗</span></button></div>
-<p class="form-help">Je aanvraag wordt niet op deze website opgeslagen. Verstuur het bericht in je e-mailprogramma of mail naar <a href="mailto:tresjuice@hotmail.com">tresjuice@hotmail.com</a>.</p>
-</form>
-</section>
-</main>
-<footer class="site-footer"><a class="wordmark" href="#top" aria-label="Palace Hotel Zandvoort, naar boven"><img class="brand-mark" src="assets/palace-brand-icon.png" alt="" aria-hidden="true"><span class="wordmark-copy"><strong>PALACE HOTEL</strong><small>ZANDVOORT</small></span></a><nav aria-label="Voettekstnavigatie"><a href="#beleving">Beleving</a><a href="#appartement">Het appartement</a><a href="#galerij">Galerij</a><a href="#locatie">Locatie</a><a href="#contact">Contact</a></nav><p>Geen gegevens worden op deze website opgeslagen. Een aanvraag wordt via je e-mailprogramma verstuurd.</p><span class="footer-end">ZANDVOORT · AAN ZEE</span></footer>
-</div></div>
-<dialog class="lightbox" id="lightbox" aria-label="Omgevingsbeeld van Zandvoort"><button class="lightbox-close" aria-label="Sluit afbeelding">Sluiten <span>×</span></button><img src="assets/zandvoort-kust.webp" alt="Panoramisch uitzicht over de kust van Zandvoort bij zonsondergang"></dialog>
-<script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/gsap.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/ScrollTrigger.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/ScrollSmoother.min.js"></script>
-<script type="module" src="app.js?v=7"></script>
-</body></html>
+<body>
+  <a class="skip-link" href="#inhoud">Ga naar de inhoud</a>
+  <header class="site-header" id="top">
+    <a class="brand" href="#top" aria-label="Palace Hotel Zandvoort — naar boven">
+      <svg class="brand-mark" viewBox="0 0 260 124" aria-hidden="true" focusable="false"><path class="mark-building" d="M73 54V18l13-9v45zm20 0V8l14-9v55zm21 0V28l13 8v18z"/><path class="mark-sun" d="M126 48a43 43 0 0 1 84 0"/><path class="mark-wave-gold" d="M8 77c35 2 58-13 86-29 18-11 34-16 54-11 24 6 43 28 67 27 15 0 27-7 37-10"/><path class="mark-wave-blue" d="M13 84c38 4 62-13 91-28 18-9 32-13 49-8 24 7 43 29 66 30 14 0 24-4 34-8"/><path class="mark-wave-gold lower" d="M48 105c31 2 51-9 74-20 20-10 37-18 58-14 20 4 37 16 60 16 8 0 15-1 22-4"/><path class="mark-wave-blue lower-blue" d="M115 106c22-11 42-18 63-15 18 3 32 10 51 10"/></svg>
+      <span><strong>PALACE HOTEL</strong><small>ZANDVOORT</small></span>
+    </a>
+    <button class="menu-toggle" aria-expanded="false" aria-controls="primary-nav">Menu</button>
+    <nav id="primary-nav" aria-label="Hoofdnavigatie">
+      <a href="#verblijf">Het verblijf</a>
+      <a href="#details">Details</a>
+      <a href="#locatie">Locatie</a>
+      <a href="#contact">Contact</a>
+    </nav>
+    <a class="header-cta" href="#boeken">Vraag je verblijf aan <span aria-hidden="true">↗</span></a>
+  </header>
+
+  <div id="smooth-wrapper">
+    <div id="smooth-content">
+      <main id="inhoud">
+        <section class="hero" aria-labelledby="hero-title">
+          <div class="hero-photo-frame" aria-hidden="true">
+            <img class="hero-photo" data-speed="auto" src="assets/zandvoort-kust.webp" alt="" fetchpriority="high">
+          </div>
+          <div class="hero-shade" aria-hidden="true"></div>
+          <div class="hero-content">
+            <p class="eyebrow hero-eyebrow">APPARTEMENT ETERNA <span>·</span> ZANDVOORT AAN ZEE</p>
+            <h1 id="hero-title">Een ander ritme.<br><em>Vlak aan zee.</em></h1>
+            <p class="hero-lede">Een licht appartement aan de boulevard. Open de deuren, voel de zeelucht en laat de dag zich vanzelf ontvouwen.</p>
+            <div class="hero-actions">
+              <a class="button button-sand" href="#boeken">Vraag beschikbaarheid aan <span aria-hidden="true">↗</span></a>
+              <a class="quiet-link" href="#verblijf">Ontdek het appartement <span aria-hidden="true">↓</span></a>
+            </div>
+          </div>
+          <div class="hero-caption"><span>BOUWES PALACE · 16E VERDIEPING</span><span>ZANDVOORT <i>·</i> NOORD-HOLLAND</span></div>
+          <a class="scroll-cue" href="#verblijf" aria-label="Scroll naar het verblijf"><span></span></a>
+        </section>
+
+        <section class="booking-wrap" id="boeken" aria-labelledby="booking-title">
+          <form class="booking-card" id="booking-form" novalidate>
+            <div class="booking-heading"><p class="eyebrow">JOUW VERBLIJF AAN ZEE</p><h2 id="booking-title">Begin met je data.</h2></div>
+            <label>Aankomst<input name="arrival" type="date" required></label>
+            <label>Vertrek<input name="departure" type="date" required></label>
+            <label>Gasten<input name="guests" type="number" min="1" value="2" required></label>
+            <button class="button button-navy" type="submit">Vraag mogelijkheden aan <span aria-hidden="true">↗</span></button>
+            <p class="booking-note" id="booking-note">Je ontvangt een antwoord per e-mail. Dit is een aanvraag, geen live beschikbaarheidscheck.</p>
+            <p class="booking-error" id="booking-error" role="alert" hidden>Kies een aankomst- en vertrekdatum, met vertrek na aankomst.</p>
+          </form>
+        </section>
+
+        <section class="intro section-pad" id="verblijf">
+          <div class="intro-kicker reveal"><span class="index-mark">01</span><span>RUIMTE OM AAN TE KOMEN</span></div>
+          <div class="intro-main reveal">
+            <h2>De kust dichtbij.<br><em>De ruimte helemaal van jou.</em></h2>
+            <p>Appartement Eterna ligt op de 16e verdieping van Bouwes Palace, aan de boulevard van Zandvoort. Met 75 m², een ruime woonkamer en twee balkons is er plek voor lange ochtenden en avonden die nog even mogen duren.</p>
+            <a class="underlined-link" href="#details">Meer over het appartement <span aria-hidden="true">↘</span></a>
+          </div>
+          <aside class="intro-aside reveal reveal-right" aria-label="Kerngegevens">
+            <div><strong>75 <small>m²</small></strong><span>woonoppervlak</span></div>
+            <div><strong>16<small>e</small></strong><span>verdieping</span></div>
+            <div><strong>02</strong><span>balkons</span></div>
+          </aside>
+        </section>
+
+        <section class="balconies" aria-labelledby="balcony-title">
+          <div class="balcony-photo reveal reveal-left">
+            <img src="assets/zandvoort-kust.webp" alt="De boulevard en kust van Zandvoort in het avondlicht" loading="lazy">
+            <span class="photo-label">ZANDVOORT · AAN ZEE</span>
+          </div>
+          <div class="balcony-copy reveal reveal-right">
+            <p class="eyebrow eyebrow-light">TWEE BALKONS, TWEE MOMENTEN</p>
+            <h2 id="balcony-title">De ochtend aan de ene kant.<br><em>De avond aan de andere.</em></h2>
+            <p>Het appartement heeft een balkon op het oosten en een op het westen. Begin met het eerste licht; sluit de dag af terwijl de zon richting zee zakt.</p>
+            <div class="sun-points">
+              <div><span class="sun-icon sun-rise" aria-hidden="true">↗</span><span><strong>OOSTEN</strong><small>Ochtendzon</small></span></div>
+              <div><span class="sun-icon sun-set" aria-hidden="true">↘</span><span><strong>WESTEN</strong><small>Avondlicht aan zee</small></span></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="details section-pad" id="details">
+          <div class="details-heading reveal"><p class="eyebrow eyebrow-dark">02 · HET APPARTEMENT</p><h2>Alles op zijn plek.<br><em>Niets hoeft haast.</em></h2><p>Een eigen entree, een complete keuken en een rustige slaapkamer maken het appartement tot een fijne uitvalsbasis aan de kust.</p></div>
+          <div class="details-list reveal reveal-right">
+            <article><span class="detail-number">01</span><div><h3>Wonen</h3><p>Ruime woonkamer met zithoek, eettafel en flatscreen-tv.</p></div><span class="detail-sign" aria-hidden="true">＋</span></article>
+            <article><span class="detail-number">02</span><div><h3>Slapen</h3><p>Eén slaapkamer met twee eenpersoonsbedden en kledingkast.</p></div><span class="detail-sign" aria-hidden="true">＋</span></article>
+            <article><span class="detail-number">03</span><div><h3>Koken</h3><p>Complete keuken met kookplaat, combimagnetron, koel-vriescombinatie, waterkoker en koffiezetapparaat.</p></div><span class="detail-sign" aria-hidden="true">＋</span></article>
+            <article><span class="detail-number">04</span><div><h3>Praktisch</h3><p>Douche, wastafel, apart toilet en gratis wifi. Huisdieren en roken zijn niet toegestaan; het appartement is niet geschikt voor kinderen.</p></div><span class="detail-sign" aria-hidden="true">＋</span></article>
+          </div>
+          <p class="details-foot reveal">Appartementinformatie volgens de bestaande Eterna-beschrijving. Vraag naar actuele voorwaarden en beschikbaarheid.</p>
+        </section>
+
+        <section class="location" id="locatie">
+          <div class="location-image reveal reveal-left"><img src="assets/zandvoort-kust.webp" alt="Uitzicht op het strand en de kustlijn van Zandvoort" loading="lazy"><span class="image-index">ZANDVOORT · NOORDZEE</span></div>
+          <div class="location-copy reveal reveal-right"><p class="eyebrow eyebrow-dark">03 · DE LOCATIE</p><h2>Een paar stappen.<br><em>En je bent aan zee.</em></h2><p>Bouwes Palace ligt aan de boulevard. Het strand, het station en het centrum zijn allemaal op korte loopafstand.</p>
+            <div class="distance-list"><div><span>Strand</span><strong>50 m</strong></div><div><span>Station</span><strong>200 m</strong></div><div><span>Centrum</span><strong>400 m</strong></div></div>
+            <p class="distance-note">Afstanden zoals vermeld in de bestaande Eterna-informatie.</p>
+          </div>
+        </section>
+
+        <section class="contact section-pad" id="contact">
+          <div class="contact-copy reveal"><p class="eyebrow eyebrow-light">EEN VRAAG OF EEN PLAN?</p><h2>We horen graag<br><em>wanneer je komt.</em></h2><p>Vertel ons wat je in gedachten hebt. We reageren persoonlijk met informatie over de mogelijkheden.</p><a class="email-link" href="mailto:tresjuice@hotmail.com">tresjuice@hotmail.com <span aria-hidden="true">↗</span></a></div>
+          <form class="contact-form reveal reveal-right" id="contact-form" novalidate>
+            <div class="field-row"><label>Naam<input name="name" autocomplete="name" required></label><label>E-mailadres<input name="email" type="email" autocomplete="email" required></label></div>
+            <label>Bericht<textarea name="message" rows="3" required placeholder="Waar kunnen we je mee helpen?"></textarea></label>
+            <p class="form-error" id="contact-error" role="alert" hidden>Vul je naam, een geldig e-mailadres en een bericht in.</p>
+            <div class="form-submit"><p>Je e-mailprogramma opent om je bericht te versturen.</p><button class="button button-sand" type="submit">Schrijf ons <span aria-hidden="true">↗</span></button></div>
+            <p class="privacy-note">Je gegevens worden niet op deze website opgeslagen.</p>
+          </form>
+        </section>
+      </main>
+
+      <footer class="site-footer">
+        <a class="brand footer-brand" href="#top" aria-label="Palace Hotel Zandvoort — naar boven"><svg class="brand-mark" viewBox="0 0 260 124" aria-hidden="true" focusable="false"><path class="mark-building" d="M73 54V18l13-9v45zm20 0V8l14-9v55zm21 0V28l13 8v18z"/><path class="mark-sun" d="M126 48a43 43 0 0 1 84 0"/><path class="mark-wave-gold" d="M8 77c35 2 58-13 86-29 18-11 34-16 54-11 24 6 43 28 67 27 15 0 27-7 37-10"/><path class="mark-wave-blue" d="M13 84c38 4 62-13 91-28 18-9 32-13 49-8 24 7 43 29 66 30 14 0 24-4 34-8"/><path class="mark-wave-gold lower" d="M48 105c31 2 51-9 74-20 20-10 37-18 58-14 20 4 37 16 60 16 8 0 15-1 22-4"/><path class="mark-wave-blue lower-blue" d="M115 106c22-11 42-18 63-15 18 3 32 10 51 10"/></svg><span><strong>PALACE HOTEL</strong><small>ZANDVOORT</small></span></a>
+        <p>Appartement Eterna · Bouwes Palace · Zandvoort aan Zee</p>
+        <nav aria-label="Voettekstnavigatie"><a href="#verblijf">Verblijf</a><a href="#details">Details</a><a href="#locatie">Locatie</a><a href="#contact">Contact</a></nav>
+        <span class="footer-mark">ZANDVOORT · AAN ZEE</span>
+      </footer>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/gsap.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/ScrollTrigger.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/ScrollSmoother.min.js"></script>
+  <script src="app.js?v=1"></script>
+</body>
+</html>

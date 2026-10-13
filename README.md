@@ -1,20 +1,24 @@
-# Palace Hotel Zandvoort — interactieve conceptwebsite
+# Palace Hotel Zandvoort
 
-Nederlandstalige statische website met een sticky Three.js-story, scrollgestuurde camerastanden, modelgebonden hotspots, vrij verkennen en een bewegende Noordzee-scène. Het aangeleverde OBJ-model wordt op basis van zijn bounding box geschaald en met vaste steen-, glas- en metaalmaterialen weergegeven. De pagina claimt geen officiële vertegenwoordiging van het hotel.
+Een compacte Nederlandstalige website voor Appartement Eterna in Zandvoort. De ervaring gebruikt kustfotografie, redactionele typografie, GSAP ScrollSmoother en lichte 2D-scrollanimaties. De pagina bevat geen WebGL of 3D-model.
 
-## Aanpasbare informatie
+## Lokaal bekijken
 
-- Contactadres en formulierontvanger: `CONTACT_EMAIL` in `app.js`.
-- Bezoekerscopy en paginatitel: `index.html`.
-- Kleuren, typografie en responsive gedrag: `styles.css`.
-- `assets/zandvoort-kust.webp` is alleen een omgevingsbeeld en wordt niet voorgesteld als foto van het appartement.
-- `assets/sunrise-tower.obj` is het aangeleverde 3D-model. Omdat het bestand geen materiaal- of kleurgegevens bevat, voegt de Three.js-scène een bescheiden palet van zandsteen en zeeglas toe.
-- `assets/palace-brand-source.webp` bewaart het aangeleverde logo; `assets/palace-brand-icon.png` bevat alleen de golfmarkering voor de kop- en voettekst. `assets/favicon.png` en `assets/apple-touch-icon.png` zijn de bijbehorende pictogramvarianten.
-- De scroll-scène pauzeert wanneer het podium uit beeld is. De contactflow blijft beschikbaar zonder WebGL.
+Open `index.html` in een browser of start een lokale webserver in deze map, bijvoorbeeld:
 
-Goedgekeurde appartementfoto's en bevestigde woninggegevens zijn nog nodig voordat kamers, voorzieningen, capaciteit, prijzen of beschikbaarheid worden getoond. Het formulier opent de e-mailapp van de bezoeker; aanvragen worden niet door deze website opgeslagen.
+```sh
+python -m http.server 8000
+```
 
-## Hosting
+## Inhoud en contact
 
-GitHub Pages publiceert via `.github/workflows/pages.yml`. Three.js wordt geladen via jsDelivr. Als WebGL niet beschikbaar is, blijft de overige website bruikbaar.
+- De contactontvanger staat als `CONTACT_EMAIL` bovenaan in `app.js`.
+- De zichtbare gegevens zijn gebaseerd op de bestaande [Eterna-pagina](https://www.eterna.nl/index.html) en [kenmerken](https://www.eterna.nl/kenmerken.html).
+- Verouderde prijzen uit het tariefschema van 2020 zijn niet opgenomen. Controleer actuele tarieven, beschikbaarheid, voorwaarden en de boekingsprovider rechtstreeks met de eigenaar.
+- De datumkeuze maakt een e-mailaanvraag. Er is geen live beschikbaarheidskoppeling en de website bewaart geen inzendingen.
+- Appartementfoto's zijn nog niet aangeleverd. Het panoramabeeld wordt alleen als kust-/omgevingsbeeld gebruikt.
+- Kleuren, indeling en responsive vormgeving staan in `styles.css`; paginacopy en secties staan in `index.html`.
 
+## Publicatie
+
+GitHub Pages publiceert de statische website via `.github/workflows/pages.yml`.

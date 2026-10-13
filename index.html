@@ -8,9 +8,8 @@
 <link rel="icon" type="image/png" href="assets/favicon.png"><link rel="apple-touch-icon" href="assets/apple-touch-icon.png">
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=Playfair+Display:wght@400;500&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="styles.css?v=7">
+<link rel="stylesheet" href="styles.css?v=8">
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/"}}</script>
-<script type="module" src="app.js?v=6"></script>
 </head>
 <body><a class="skip-link" href="#inhoud">Ga naar de inhoud</a>
 <header class="site-header" id="top">
@@ -19,6 +18,7 @@
 <nav id="primary-nav" aria-label="Hoofdnavigatie"><a href="#beleving">Beleving</a><a href="#appartement">Het appartement</a><a href="#galerij">Galerij</a><a href="#locatie">Locatie</a><a href="#contact">Contact</a></nav>
 <a class="header-contact" href="#contact">Neem contact op <span>↗</span></a>
 </header>
+<div id="smooth-wrapper"><div id="smooth-content">
 <main id="inhoud">
 <section class="experience" id="beleving" aria-label="Interactieve kust- en architectuurervaring">
 <div class="scene-stage" id="scene-stage">
@@ -93,5 +93,10 @@
 </section>
 </main>
 <footer class="site-footer"><a class="wordmark" href="#top" aria-label="Palace Hotel Zandvoort, naar boven"><img class="brand-mark" src="assets/palace-brand-icon.png" alt="" aria-hidden="true"><span class="wordmark-copy"><strong>PALACE HOTEL</strong><small>ZANDVOORT</small></span></a><nav aria-label="Voettekstnavigatie"><a href="#beleving">Beleving</a><a href="#appartement">Het appartement</a><a href="#galerij">Galerij</a><a href="#locatie">Locatie</a><a href="#contact">Contact</a></nav><p>Geen gegevens worden op deze website opgeslagen. Een aanvraag wordt via je e-mailprogramma verstuurd.</p><span class="footer-end">ZANDVOORT · AAN ZEE</span></footer>
+</div></div>
 <dialog class="lightbox" id="lightbox" aria-label="Omgevingsbeeld van Zandvoort"><button class="lightbox-close" aria-label="Sluit afbeelding">Sluiten <span>×</span></button><img src="assets/zandvoort-kust.webp" alt="Panoramisch uitzicht over de kust van Zandvoort bij zonsondergang"></dialog>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/gsap.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/ScrollTrigger.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/gsap@3.13.0/dist/ScrollSmoother.min.js"></script>
+<script type="module" src="app.js?v=7"></script>
 </body></html>

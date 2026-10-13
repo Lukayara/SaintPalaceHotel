@@ -7,6 +7,13 @@ const CONTACT_EMAIL='tresjuice@hotmail.com';
 const canvas=document.querySelector('#coast-scene'),stage=document.querySelector('#scene-stage'),experience=document.querySelector('#beleving');
 const fallback=document.querySelector('#scene-fallback'),loaderMessage=document.querySelector('#scene-loader');
 const reducedMotion=matchMedia('(prefers-reduced-motion: reduce)').matches;
+const gsap=window.gsap,ScrollTrigger=window.ScrollTrigger,ScrollSmoother=window.ScrollSmoother;
+if(gsap&&ScrollTrigger&&ScrollSmoother){
+ gsap.registerPlugin(ScrollTrigger,ScrollSmoother);
+ if(!reducedMotion){
+  window.siteSmoother=ScrollSmoother.create({wrapper:'#smooth-wrapper',content:'#smooth-content',smooth:1.15,smoothTouch:.12,effects:true,normalizeScroll:false});
+ }
+}
 const chapterElements=[...document.querySelectorAll('.story-chapter')],viewButtons=[...document.querySelectorAll('[data-view]')],hotspotButtons=[...document.querySelectorAll('[data-hotspot]')];
 const hotspotNote=document.querySelector('#hotspot-note'),clamp=(v,min,max)=>Math.min(max,Math.max(min,v)),smooth=t=>t*t*(3-2*t);
 let renderer,scene,camera,controls,towerRoot,towerBounds,modelSize,modelCenter,fallbackRoot;
@@ -136,7 +143,15 @@ document.querySelectorAll(hoverTextTargets).forEach(element=>{
   });node.replaceWith(fragment)
  }
 });
-const revealObserver=new IntersectionObserver(entries=>entries.forEach(e=>{if(e.isIntersecting){e.target.classList.add('is-visible');revealObserver.unobserve(e.target)}}),{threshold:.12});document.querySelectorAll('.reveal').forEach(el=>revealObserver.observe(el));
+const revealTargets=[...document.querySelectorAll('.reveal')];
+if(gsap&&ScrollTrigger&&!reducedMotion){
+ revealTargets.forEach(el=>{
+  const x=el.classList.contains('reveal-left')?-42:el.classList.contains('reveal-right')?42:0;
+  const y=el.classList.contains('reveal-up')?32:12;
+  el.classList.add('gsap-reveal');
+  gsap.fromTo(el,{autoAlpha:0,x,y},{autoAlpha:1,x:0,y:0,duration:.95,ease:'power3.out',scrollTrigger:{trigger:el,start:'top 88%',once:true}})
+ });
+}else revealTargets.forEach(el=>el.classList.add('is-visible'));
 const form=document.querySelector('#inquiry-form'),error=document.querySelector('#form-error'),status=document.querySelector('#form-status');
 form.addEventListener('submit',e=>{e.preventDefault();const d=new FormData(form),name=String(d.get('name')||'').trim(),email=String(d.get('email')||'').trim(),message=String(d.get('message')||'').trim(),okN=!!name,okE=/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email),okM=!!message;form.elements.name.setAttribute('aria-invalid',String(!okN));form.elements.email.setAttribute('aria-invalid',String(!okE));form.elements.message.setAttribute('aria-invalid',String(!okM));if(!okN||!okE||!okM){error.hidden=false;status.textContent='';(!okN?form.elements.name:!okE?form.elements.email:form.elements.message).focus();return}error.hidden=true;const lines=['Naam: '+name,'E-mailadres: '+email,'Aankomst: '+(d.get('arrival')||'niet opgegeven'),'Vertrek: '+(d.get('departure')||'niet opgegeven'),'Aantal gasten: '+(d.get('guests')||'niet opgegeven'),'','Bericht:',message];status.textContent='Je e-mailprogramma wordt geopend. Verstuur het bericht daar om je aanvraag te verzenden.';location.href='mailto:'+CONTACT_EMAIL+'?subject='+encodeURIComponent('Verblijfsaanvraag Zandvoort — '+name)+'&body='+encodeURIComponent(lines.join('\n'))});
 form.querySelectorAll('input,textarea').forEach(el=>el.addEventListener('input',()=>el.setAttribute('aria-invalid','false')));

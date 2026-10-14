@@ -1,46 +1,14 @@
 const CONTACT_EMAIL = 'tresjuice@hotmail.com';
 const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-const gsap = window.gsap;
-const ScrollTrigger = window.ScrollTrigger;
-const ScrollSmoother = window.ScrollSmoother;
-
-if (gsap && ScrollTrigger && ScrollSmoother) {
-  gsap.registerPlugin(ScrollTrigger, ScrollSmoother);
-  if (!reduceMotion) {
-    window.siteSmoother = ScrollSmoother.create({
-      wrapper: '#smooth-wrapper',
-      content: '#smooth-content',
-      smooth: 1.05,
-      smoothTouch: 0.12,
-      effects: true,
-    });
-    document.documentElement.classList.add('motion-enhanced');
-    gsap.from('.hero-content > *', {
-      autoAlpha: 0,
-      y: 26,
-      duration: 0.9,
-      stagger: 0.12,
-      ease: 'power3.out',
-      delay: 0.2,
-    });
-    gsap.utils.toArray('.reveal').forEach((element) => {
-      const x = element.classList.contains('reveal-left') ? -38 : element.classList.contains('reveal-right') ? 38 : 0;
-      const y = x === 0 ? 24 : 10;
-      gsap.fromTo(element, { autoAlpha: 0, x, y }, {
-        autoAlpha: 1,
-        x: 0,
-        y: 0,
-        duration: 0.88,
-        ease: 'power3.out',
-        scrollTrigger: { trigger: element, start: 'top 86%', once: true },
-      });
-    });
-    window.addEventListener('load', () => ScrollTrigger.refresh(), { once: true });
-  }
-}
 
 const menuButton = document.querySelector('.menu-toggle');
 const primaryNav = document.querySelector('#primary-nav');
+const siteHeader = document.querySelector('.site-header');
+function updateHeader() {
+  siteHeader.classList.toggle('is-scrolled', window.scrollY > 32);
+}
+updateHeader();
+window.addEventListener('scroll', updateHeader, { passive: true });
 menuButton.addEventListener('click', () => {
   const open = menuButton.getAttribute('aria-expanded') !== 'true';
   menuButton.setAttribute('aria-expanded', String(open));
@@ -52,6 +20,113 @@ primaryNav.querySelectorAll('a').forEach((link) => link.addEventListener('click'
   menuButton.setAttribute('aria-expanded', 'false');
   menuButton.textContent = 'Menu';
 }));
+
+if (!reduceMotion && 'IntersectionObserver' in window) {
+  document.documentElement.classList.add('motion-ready');
+  const revealObserver = new IntersectionObserver((entries, observer) => {
+    entries.forEach((entry) => {
+      if (!entry.isIntersecting) return;
+      entry.target.classList.add('is-visible');
+      observer.unobserve(entry.target);
+    });
+  }, { threshold: 0.12, rootMargin: '0px 0px -6% 0px' });
+  document.querySelectorAll('.reveal').forEach((element) => revealObserver.observe(element));
+
+  const sectionObserver = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      if (!entry.isIntersecting) return;
+      primaryNav.querySelectorAll('a').forEach((link) => {
+        if (link.hash === `#${entry.target.id}`) link.setAttribute('aria-current', 'location');
+        else link.removeAttribute('aria-current');
+      });
+    });
+  }, { rootMargin: '-38% 0px -52% 0px' });
+  document.querySelectorAll('main section[id]').forEach((section) => sectionObserver.observe(section));
+}
+
+const gallery = document.querySelector('.gallery');
+const galleryPhotos = [
+  { src: 'assets/zandvoort-kust.webp', alt: 'Bouwes Palace en de kust van Zandvoort bij zonsondergang', title: 'Bouwes Palace · Zandvoort' },
+  { src: 'assets/eterna/uitzicht10.webp', alt: 'Uitzicht vanaf Appartement Eterna over zee en strand', title: 'Uitzicht vanaf het balkon' },
+  { src: 'assets/eterna/woonkamer10.webp', alt: 'De woonkamer van Appartement Eterna met zicht op zee', title: 'Woonkamer' },
+  { src: 'assets/eterna/slaapkamer0.webp', alt: 'Slaapkamer van Appartement Eterna', title: 'Slaapkamer' },
+  { src: 'assets/eterna/strand.webp', alt: 'Het strand en de branding in Zandvoort', title: 'Strand van Zandvoort' },
+];
+const lightbox = document.querySelector('#photo-lightbox');
+const lightboxImage = document.querySelector('#lightbox-image');
+const lightboxCaption = document.querySelector('#lightbox-caption');
+const lightboxCount = document.querySelector('#lightbox-count');
+let activePhoto = 0;
+let lightboxTrigger = null;
+
+function showLightboxPhoto(index) {
+  activePhoto = (index + galleryPhotos.length) % galleryPhotos.length;
+  const photo = galleryPhotos[activePhoto];
+  lightboxImage.src = photo.src;
+  lightboxImage.alt = photo.alt;
+  lightboxCaption.textContent = photo.title;
+  lightboxCount.textContent = `${String(activePhoto + 1).padStart(2, '0')} / ${String(galleryPhotos.length).padStart(2, '0')}`;
+}
+
+function openLightbox(index, trigger) {
+  lightboxTrigger = trigger;
+  showLightboxPhoto(index);
+  lightbox.showModal();
+}
+
+function closeLightbox() {
+  lightbox.close();
+  lightboxTrigger?.focus();
+}
+
+function makeGalleryGroup(track, duplicate = false) {
+  const group = document.createElement('div');
+  group.className = 'gallery-group';
+  if (duplicate) {
+    group.setAttribute('aria-hidden', 'true');
+  }
+  galleryPhotos.forEach((photo, index) => {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'gallery-card';
+    button.setAttribute('aria-label', `Bekijk foto: ${photo.title}`);
+    if (duplicate) button.tabIndex = -1;
+    const image = document.createElement('img');
+    image.src = photo.src;
+    image.alt = duplicate ? '' : photo.alt;
+    image.loading = 'lazy';
+    image.decoding = 'async';
+    const caption = document.createElement('span');
+    caption.textContent = photo.title;
+    button.append(image, caption);
+    const originalButton = duplicate
+      ? track.querySelector('.gallery-group:not([aria-hidden]) .gallery-card:nth-child(' + (index + 1) + ')')
+      : button;
+    button.addEventListener('click', () => openLightbox(index, originalButton));
+    group.append(button);
+  });
+  track.append(group);
+}
+
+document.querySelectorAll('.gallery-track').forEach((track) => {
+  makeGalleryGroup(track);
+  makeGalleryGroup(track, true);
+});
+document.querySelector('#gallery-motion-toggle').addEventListener('click', (event) => {
+  const button = event.currentTarget;
+  const paused = button.getAttribute('aria-pressed') !== 'true';
+  gallery.classList.toggle('is-paused', paused);
+  button.setAttribute('aria-pressed', String(paused));
+  button.innerHTML = `<span aria-hidden="true">${paused ? '▶' : 'Ⅱ'}</span> ${paused ? 'Beweging hervatten' : 'Beweging pauzeren'}`;
+});
+document.querySelector('#lightbox-close').addEventListener('click', closeLightbox);
+document.querySelector('#lightbox-previous').addEventListener('click', () => showLightboxPhoto(activePhoto - 1));
+document.querySelector('#lightbox-next').addEventListener('click', () => showLightboxPhoto(activePhoto + 1));
+lightbox.addEventListener('click', (event) => { if (event.target === lightbox) closeLightbox(); });
+lightbox.addEventListener('keydown', (event) => {
+  if (event.key === 'ArrowLeft') showLightboxPhoto(activePhoto - 1);
+  if (event.key === 'ArrowRight') showLightboxPhoto(activePhoto + 1);
+});
 
 const API_URL = String(window.AVAILABILITY_API_URL || '').trim();
 const MAX_NIGHTS = 7;
@@ -171,7 +246,6 @@ function renderCalendar() {
     calendar.append(button);
   });
   updateSelection();
-  if (window.ScrollTrigger) window.ScrollTrigger.refresh();
 }
 
 function chooseCalendarDate(value) {

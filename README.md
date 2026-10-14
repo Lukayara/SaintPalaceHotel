@@ -1,6 +1,6 @@
 # Palace Hotel Zandvoort
 
-Een compacte Nederlandstalige website voor Appartement Eterna in Zandvoort. De ervaring gebruikt kustfotografie, redactionele typografie, GSAP ScrollSmoother en lichte 2D-scrollanimaties. De pagina bevat geen WebGL of 3D-model.
+Een Nederlandstalige website voor Appartement Eterna in Zandvoort. De pagina combineert kustfotografie met interactieve fotolinten, een fotoweergave, uitklapbare appartementinformatie en een gedeelde beschikbaarheidskalender. De pagina gebruikt het gewone browser-scrollen en bevat geen 3D-model.
 
 ## Lokaal bekijken
 
@@ -16,7 +16,8 @@ python -m http.server 8000
 - De zichtbare gegevens zijn gebaseerd op de bestaande [Eterna-pagina](https://www.eterna.nl/index.html) en [kenmerken](https://www.eterna.nl/kenmerken.html).
 - Verouderde prijzen uit het tariefschema van 2020 zijn niet opgenomen. Controleer actuele tarieven, beschikbaarheid, voorwaarden en de boekingsprovider rechtstreeks met de eigenaar.
 - Een verblijf kan maximaal zeven nachten duren. De boekingsaanvraag opent een e-mail; de website bewaart geen aanvragen.
-- Appartementfoto's zijn nog niet aangeleverd. Het panoramabeeld wordt alleen als kust-/omgevingsbeeld gebruikt.
+- De galerij gebruikt het panorama uit `assets/zandvoort-kust.webp` en de bestaande foto's van Appartement Eterna van [eterna.nl/foto.html](https://www.eterna.nl/foto.html). De foto’s openen in een navigeerbare fotoweergave; de twee bewegende fotolinten kunnen worden gepauzeerd.
+- Scrollanimaties worden met de ingebouwde browserfuncties uitgevoerd; de pagina blijft normaal scrollbaar. De animaties worden verminderd als de bezoeker minder beweging heeft ingesteld.
 - Kleuren, indeling en responsive vormgeving staan in `styles.css`; paginacopy en secties staan in `index.html`.
 
 ## Gedeelde beschikbaarheidskalender instellen

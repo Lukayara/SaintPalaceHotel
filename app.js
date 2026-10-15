@@ -280,7 +280,12 @@ function renderCalendar() {
       button.textContent = String(cell.day);
       button.dataset.date = cell.value;
       button.dataset.state = state;
-      button.setAttribute('aria-label', `${prettyDate(cell.value, { weekday: 'long', day: 'numeric', month: 'long' })}: ${state === 'available' ? 'beschikbaar' : state === 'booked' ? 'bezet' : state === 'past' ? 'verstreken' : 'nog niet bijgewerkt'}`);
+      const isToday = cell.value === isoDate(localToday);
+      if (isToday) {
+        button.classList.add('is-today');
+        button.setAttribute('aria-current', 'date');
+      }
+      button.setAttribute('aria-label', `${prettyDate(cell.value, { weekday: 'long', day: 'numeric', month: 'long' })}${isToday ? ', vandaag' : ''}: ${state === 'available' ? 'beschikbaar' : state === 'booked' ? 'bezet' : state === 'past' ? 'verstreken' : 'nog niet bijgewerkt'}`);
       const selected = cell.value === selectedArrival || cell.value === selectedDeparture;
       const inRange = selectedArrival && selectedDeparture && cell.value > selectedArrival && cell.value < selectedDeparture;
       if (selected) button.classList.add('is-selected');
@@ -356,11 +361,59 @@ async function refreshAvailability() {
   }
 }
 
-const initialIsoDate = isoDate(localToday);
-arrivalField.min = initialIsoDate;
-departureField.min = initialIsoDate;
+function todayIsoDate() {
+  return isoDate(localToday);
+}
+
+function updateDateMinimums() {
+  const today = todayIsoDate();
+  arrivalField.min = today;
+  departureField.min = arrivalField.value || today;
+  const scheduleForm = document.querySelector('#admin-schedule-form');
+  scheduleForm.elements.start.min = today;
+  scheduleForm.elements.end.min = scheduleForm.elements.start.value || today;
+}
+
+function syncLocalToday() {
+  const nextToday = new Date();
+  nextToday.setHours(0, 0, 0, 0);
+  if (nextToday.getTime() === localToday.getTime()) return;
+
+  const previousMonth = `${localToday.getFullYear()}-${localToday.getMonth()}`;
+  const wasShowingCurrentMonth = `${displayedMonth.getFullYear()}-${displayedMonth.getMonth()}` === previousMonth;
+  localToday.setTime(nextToday.getTime());
+  if (wasShowingCurrentMonth) displayedMonth = new Date(localToday.getFullYear(), localToday.getMonth(), 1);
+
+  if ((selectedArrival && selectedArrival < todayIsoDate()) || (selectedDeparture && selectedDeparture <= todayIsoDate())) {
+    selectedArrival = '';
+    selectedDeparture = '';
+    arrivalField.value = '';
+    departureField.value = '';
+    departureField.max = '';
+    calendarMessage.textContent = 'De datum is veranderd. Kies opnieuw je aankomst en vertrek.';
+  }
+  updateDateMinimums();
+  renderCalendar();
+  refreshAvailability();
+}
+
+function scheduleMidnightRefresh() {
+  const nextMidnight = new Date();
+  nextMidnight.setHours(24, 0, 50, 0);
+  window.setTimeout(() => {
+    syncLocalToday();
+    scheduleMidnightRefresh();
+  }, Math.max(1000, nextMidnight.getTime() - Date.now()));
+}
+
+updateDateMinimums();
+scheduleMidnightRefresh();
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') syncLocalToday();
+});
+window.addEventListener('focus', syncLocalToday);
 arrivalField.addEventListener('change', () => {
-  departureField.min = arrivalField.value || initialIsoDate;
+  departureField.min = arrivalField.value || todayIsoDate();
   departureField.max = arrivalField.value ? addDays(arrivalField.value, MAX_NIGHTS) : '';
   if (departureField.value && (departureField.value <= arrivalField.value || departureField.value > departureField.max)) departureField.value = '';
 });
@@ -436,8 +489,7 @@ document.querySelector('#admin-login-form').addEventListener('submit', async (ev
     adminCode = code;
     adminLogin.hidden = true;
     adminEditor.hidden = false;
-    document.querySelector('#admin-schedule-form').elements.start.min = initialIsoDate;
-    document.querySelector('#admin-schedule-form').elements.end.min = initialIsoDate;
+    updateDateMinimums();
     document.querySelector('#admin-message').textContent = '';
   } catch (authError) {
     error.textContent = authError.message || 'Inloggen is mislukt.';
@@ -446,7 +498,7 @@ document.querySelector('#admin-login-form').addEventListener('submit', async (ev
 });
 document.querySelector('#admin-schedule-form').elements.start.addEventListener('change', (event) => {
   const end = document.querySelector('#admin-schedule-form').elements.end;
-  end.min = event.currentTarget.value || initialIsoDate;
+  end.min = event.currentTarget.value || todayIsoDate();
 });
 document.querySelector('#admin-schedule-form').addEventListener('submit', async (event) => {
   event.preventDefault();

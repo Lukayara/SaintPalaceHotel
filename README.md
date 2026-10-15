@@ -16,8 +16,8 @@ python -m http.server 8000
 - De zichtbare gegevens zijn gebaseerd op de bestaande [Eterna-pagina](https://www.eterna.nl/index.html) en [kenmerken](https://www.eterna.nl/kenmerken.html).
 - Verouderde prijzen uit het tariefschema van 2020 zijn niet opgenomen. Controleer actuele tarieven, beschikbaarheid, voorwaarden en de boekingsprovider rechtstreeks met de eigenaar.
 - Een verblijf kan maximaal zeven nachten duren. De boekingsaanvraag opent een e-mail; de website bewaart geen aanvragen.
-- De galerij gebruikt het panorama uit `assets/zandvoort-kust.webp` en de bestaande foto's van Appartement Eterna van [eterna.nl/foto.html](https://www.eterna.nl/foto.html). De foto’s openen in een navigeerbare fotoweergave; de twee bewegende fotolinten kunnen worden gepauzeerd.
-- Scrollanimaties worden met de ingebouwde browserfuncties uitgevoerd; de pagina blijft normaal scrollbaar. De animaties worden verminderd als de bezoeker minder beweging heeft ingesteld.
+- De galerij gebruikt de zes aangeleverde appartementfoto’s in `assets/eterna/`. De foto’s openen in een navigeerbare fotoweergave; de twee bewegende fotolinten kunnen worden gepauzeerd.
+- Scrollanimaties omvatten tekstregels die in beeld schuiven, subtiele beeldparallax, sectie-onthullingen en een voortgangslijn. De pagina blijft normaal scrollbaar en vermindert animaties als de bezoeker minder beweging heeft ingesteld.
 - Kleuren, indeling en responsive vormgeving staan in `styles.css`; paginacopy en secties staan in `index.html`.
 
 ## Gedeelde beschikbaarheidskalender instellen

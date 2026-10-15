@@ -22,6 +22,25 @@ primaryNav.querySelectorAll('a').forEach((link) => link.addEventListener('click'
 }));
 
 if (!reduceMotion && 'IntersectionObserver' in window) {
+  function prepareHeadingLines(heading) {
+    const lines = [[]];
+    [...heading.childNodes].forEach((node) => {
+      if (node.nodeName === 'BR') lines.push([]);
+      else lines[lines.length - 1].push(node);
+    });
+    heading.replaceChildren(...lines.map((nodes, index) => {
+      const line = document.createElement('span');
+      line.className = 'motion-line';
+      line.style.setProperty('--line-index', index);
+      const text = document.createElement('span');
+      text.className = 'motion-line-inner';
+      nodes.forEach((node) => text.append(node));
+      line.append(text);
+      return line;
+    }));
+  }
+
+  document.querySelectorAll('.hero h1, .reveal h2').forEach(prepareHeadingLines);
   document.documentElement.classList.add('motion-ready');
   const revealObserver = new IntersectionObserver((entries, observer) => {
     entries.forEach((entry) => {
@@ -44,13 +63,39 @@ if (!reduceMotion && 'IntersectionObserver' in window) {
   document.querySelectorAll('main section[id]').forEach((section) => sectionObserver.observe(section));
 }
 
+const scrollProgress = document.querySelector('#scroll-progress-fill');
+const parallaxImages = reduceMotion ? [] : [...document.querySelectorAll('[data-parallax]')];
+let scrollFramePending = false;
+function updateScrollMotion() {
+  const scrollable = document.documentElement.scrollHeight - window.innerHeight;
+  const progress = scrollable > 0 ? Math.min(1, Math.max(0, window.scrollY / scrollable)) : 0;
+  scrollProgress.style.transform = `scaleX(${progress})`;
+
+  parallaxImages.forEach((image) => {
+    const bounds = image.getBoundingClientRect();
+    const speed = Number(image.dataset.parallax) || 0;
+    const offset = Math.max(-42, Math.min(42, (window.innerHeight / 2 - (bounds.top + bounds.height / 2)) * speed));
+    image.style.setProperty('--parallax-y', `${offset.toFixed(1)}px`);
+  });
+  scrollFramePending = false;
+}
+function requestScrollMotion() {
+  if (scrollFramePending) return;
+  scrollFramePending = true;
+  window.requestAnimationFrame(updateScrollMotion);
+}
+requestScrollMotion();
+window.addEventListener('scroll', requestScrollMotion, { passive: true });
+window.addEventListener('resize', requestScrollMotion, { passive: true });
+
 const gallery = document.querySelector('.gallery');
 const galleryPhotos = [
-  { src: 'assets/zandvoort-kust.webp', alt: 'Bouwes Palace en de kust van Zandvoort bij zonsondergang', title: 'Bouwes Palace · Zandvoort' },
-  { src: 'assets/eterna/uitzicht10.webp', alt: 'Uitzicht vanaf Appartement Eterna over zee en strand', title: 'Uitzicht vanaf het balkon' },
-  { src: 'assets/eterna/woonkamer10.webp', alt: 'De woonkamer van Appartement Eterna met zicht op zee', title: 'Woonkamer' },
-  { src: 'assets/eterna/slaapkamer0.webp', alt: 'Slaapkamer van Appartement Eterna', title: 'Slaapkamer' },
-  { src: 'assets/eterna/strand.webp', alt: 'Het strand en de branding in Zandvoort', title: 'Strand van Zandvoort' },
+  { src: 'assets/eterna/zee-raam.jpg', alt: 'De zee gezien door de ramen van het appartement', title: 'De zee, altijd dichtbij' },
+  { src: 'assets/eterna/woonkamer.jpg', alt: 'Lichte woonkamer met uitzicht op zee', title: 'Woonkamer in het avondlicht' },
+  { src: 'assets/eterna/woonkamer-uitzicht.jpg', alt: 'De woonkamer met grote ramen en een balkon aan zee', title: 'Wonen met uitzicht' },
+  { src: 'assets/eterna/slaapkamer.jpg', alt: 'Slaapkamer met een tweepersoonsbed en extra bed', title: 'Slaapkamer' },
+  { src: 'assets/eterna/slaapkamer-uitzicht.jpg', alt: 'Slaapkamer met openslaande deuren en uitzicht over Zandvoort', title: 'Een kamer boven de stad' },
+  { src: 'assets/eterna/zandvoort-uitzicht.jpg', alt: 'Panoramisch uitzicht over Zandvoort vanaf het appartement', title: 'Zandvoort van boven' },
 ];
 const lightbox = document.querySelector('#photo-lightbox');
 const lightboxImage = document.querySelector('#lightbox-image');

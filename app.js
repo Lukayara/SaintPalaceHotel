@@ -245,6 +245,17 @@ function dateStatus(value) {
   return availability.get(value) || 'unknown';
 }
 
+function setCalendarMessage(message, tone = 'info') {
+  calendarMessage.textContent = message;
+  calendarMessage.dataset.tone = tone;
+  if (!reduceMotion && typeof calendarMessage.animate === 'function') {
+    calendarMessage.animate(
+      [{ opacity: 0.45, transform: 'translateY(4px)' }, { opacity: 1, transform: 'translateY(0)' }],
+      { duration: 260, easing: 'cubic-bezier(.2,.75,.25,1)' },
+    );
+  }
+}
+
 function selectionIsAvailable(start, end) {
   let date = start;
   while (date < end) {
@@ -254,7 +265,7 @@ function selectionIsAvailable(start, end) {
   return true;
 }
 
-function renderCalendar() {
+function renderCalendar(animate = false) {
   const year = displayedMonth.getFullYear();
   const month = displayedMonth.getMonth();
   monthLabel.textContent = new Intl.DateTimeFormat('nl-NL', { month: 'long', year: 'numeric' }).format(displayedMonth);
@@ -267,7 +278,7 @@ function renderCalendar() {
   while (cells.length % 7) cells.push({ empty: true });
 
   calendar.replaceChildren();
-  cells.forEach((cell) => {
+  cells.forEach((cell, index) => {
     const button = document.createElement('button');
     button.type = 'button';
     button.className = 'calendar-day';
@@ -286,12 +297,19 @@ function renderCalendar() {
         button.setAttribute('aria-current', 'date');
       }
       button.setAttribute('aria-label', `${prettyDate(cell.value, { weekday: 'long', day: 'numeric', month: 'long' })}${isToday ? ', vandaag' : ''}: ${state === 'available' ? 'beschikbaar' : state === 'booked' ? 'bezet' : state === 'past' ? 'verstreken' : 'nog niet bijgewerkt'}`);
+      button.title = `${prettyDate(cell.value, { weekday: 'long', day: 'numeric', month: 'long' })}${isToday ? ' · vandaag' : ''} · ${state === 'available' ? 'beschikbaar' : state === 'booked' ? 'bezet' : state === 'past' ? 'verstreken' : 'nog niet bijgewerkt'}`;
       const selected = cell.value === selectedArrival || cell.value === selectedDeparture;
       const inRange = selectedArrival && selectedDeparture && cell.value > selectedArrival && cell.value < selectedDeparture;
       if (selected) button.classList.add('is-selected');
       else if (inRange) button.classList.add('is-in-range');
       button.disabled = state === 'past';
       if (!button.disabled) button.addEventListener('click', () => chooseCalendarDate(cell.value));
+      if (animate && !reduceMotion && typeof button.animate === 'function') {
+        button.animate(
+          [{ opacity: 0, transform: 'translateY(12px) scale(.9)' }, { opacity: 1, transform: 'translateY(0) scale(1)' }],
+          { duration: 420, delay: Math.min(index * 17, 340), easing: 'cubic-bezier(.2,.75,.25,1)', fill: 'backwards' },
+        );
+      }
     }
     calendar.append(button);
   });
@@ -301,25 +319,44 @@ function renderCalendar() {
 function chooseCalendarDate(value) {
   const state = dateStatus(value);
   if (!selectedArrival || selectedDeparture || value <= selectedArrival) {
+    if (state === 'booked') {
+      setCalendarMessage(`${prettyDate(value)} is al bezet. Kies een dag met een groene stip.`, 'error');
+      return;
+    }
     if (state !== 'available') {
-      calendarMessage.textContent = 'Kies een groene, beschikbare aankomstdag.';
+      setCalendarMessage(`De beschikbaarheid van ${prettyDate(value)} is nog niet bevestigd. Mail tresjuice@hotmail.com om dit na te vragen.`, 'error');
       return;
     }
     selectedArrival = value;
     selectedDeparture = '';
-    calendarMessage.textContent = 'Kies nu een vertrekdag, maximaal zeven nachten later.';
+    setCalendarMessage('Aankomst gekozen. Kies nu een beschikbare vertrekdag, maximaal zeven nachten later.', 'success');
   } else {
     const nights = Math.round((dateFromIso(value) - dateFromIso(selectedArrival)) / 86400000);
     if (nights < 1 || nights > MAX_NIGHTS) {
-      calendarMessage.textContent = 'Een verblijf duurt minimaal één en maximaal zeven nachten.';
+      setCalendarMessage('Een verblijf duurt minimaal één en maximaal zeven nachten.', 'error');
       return;
     }
     if (!selectionIsAvailable(selectedArrival, value)) {
-      calendarMessage.textContent = 'Een of meer nachten in deze periode zijn bezet of nog niet bijgewerkt.';
+      let checkDate = selectedArrival;
+      let blockedState = 'unknown';
+      while (checkDate < value) {
+        const checkState = dateStatus(checkDate);
+        if (checkState !== 'available') {
+          blockedState = checkState;
+          break;
+        }
+        checkDate = addDays(checkDate, 1);
+      }
+      setCalendarMessage(
+        blockedState === 'booked'
+          ? 'Deze periode bevat een bezette nacht. Kies een ander verblijf.'
+          : 'Deze periode bevat een nacht waarvan de beschikbaarheid nog niet is bevestigd. Mail tresjuice@hotmail.com om dit na te vragen.',
+        'error',
+      );
       return;
     }
     selectedDeparture = value;
-    calendarMessage.textContent = `${nights} ${nights === 1 ? 'nacht' : 'nachten'} geselecteerd. Vraag de periode aan per e-mail.`;
+    setCalendarMessage(`${nights} ${nights === 1 ? 'nacht' : 'nachten'} geselecteerd. Vraag de periode aan per e-mail.`, 'success');
   }
   renderCalendar();
 }
@@ -339,11 +376,11 @@ function updateSelection() {
 
 async function refreshAvailability() {
   if (!API_URL) {
-    calendarMessage.textContent = 'De gedeelde agenda wordt nog gekoppeld. Vraag intussen actuele beschikbaarheid per e-mail.';
+    setCalendarMessage('De gedeelde agenda wordt nog gekoppeld. Vraag intussen actuele beschikbaarheid per e-mail.', 'error');
     renderCalendar();
     return;
   }
-  calendarMessage.textContent = 'Beschikbaarheid laden…';
+  setCalendarMessage('Beschikbaarheid laden…', 'loading');
   try {
     const data = await apiJsonp({ action: 'read' });
     if (!data || !data.ok || !Array.isArray(data.days)) throw new Error('De beschikbaarheid kon niet worden geladen.');
@@ -351,11 +388,11 @@ async function refreshAvailability() {
     data.days.forEach((entry) => {
       if (/^\d{4}-\d{2}-\d{2}$/.test(entry.date) && ['available', 'booked'].includes(entry.status)) availability.set(entry.date, entry.status);
     });
-    calendarMessage.textContent = 'Groene dagen zijn beschikbaar. Kies aankomst en vertrek om je aanvraag te versturen.';
-    renderCalendar();
+    setCalendarMessage('Groene stippen zijn beschikbaar. Een rode × is bezet; een vraagteken wacht nog op bevestiging.', 'success');
+    renderCalendar(true);
     return data.days;
   } catch (error) {
-    calendarMessage.textContent = error.message || 'De beschikbaarheid kon niet worden geladen.';
+    setCalendarMessage(error.message || 'De beschikbaarheid kon niet worden geladen.', 'error');
     renderCalendar();
     return null;
   }
@@ -390,7 +427,7 @@ function syncLocalToday() {
     arrivalField.value = '';
     departureField.value = '';
     departureField.max = '';
-    calendarMessage.textContent = 'De datum is veranderd. Kies opnieuw je aankomst en vertrek.';
+    setCalendarMessage('De datum is veranderd. Kies opnieuw je aankomst en vertrek.', 'info');
   }
   updateDateMinimums();
   renderCalendar();
@@ -419,11 +456,11 @@ arrivalField.addEventListener('change', () => {
 });
 document.querySelector('#calendar-prev').addEventListener('click', () => {
   displayedMonth = new Date(displayedMonth.getFullYear(), displayedMonth.getMonth() - 1, 1);
-  renderCalendar();
+  renderCalendar(true);
 });
 document.querySelector('#calendar-next').addEventListener('click', () => {
   displayedMonth = new Date(displayedMonth.getFullYear(), displayedMonth.getMonth() + 1, 1);
-  renderCalendar();
+  renderCalendar(true);
 });
 requestSelectedDates.addEventListener('click', () => {
   if (selectedArrival && selectedDeparture) {
